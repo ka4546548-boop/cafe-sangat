@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cafe Sangat AI Business</title>
+<style>
+body{margin:0;font-family:Arial;background:#1e1e1e;color:white;scroll-behavior:smooth;}
+header{background:url("images/header.jpg") center/cover;height:250px;display:flex;justify-content:center;align-items:center;}
+header h1{background:rgba(0,0,0,0.6);padding:20px 40px;border-radius:15px;text-align:center;}
+nav{background:#111;padding:15px;text-align:center;position:sticky;top:0;z-index:1000;}
+nav a{color:white;margin:10px;text-decoration:none;font-weight:bold;}
+nav a:hover{color:#f39c12;}
+section{padding:40px;text-align:center;}
+h2{margin-bottom:20px;}
+input,button{margin:5px;padding:8px;border-radius:8px;border:none;}
+button{cursor:pointer;background:#f39c12;color:white;font-weight:bold;}
+.whatsapp{position:fixed;left:15px;bottom:15px;background:#25D366;color:white;padding:15px;border-radius:50%;font-size:22px;text-decoration:none;}
+.menu{display:flex;flex-wrap:wrap;justify-content:center;gap:20px;}
+.item{background:#111;width:200px;padding:10px;border-radius:15px;}
+.item img{width:100%;border-radius:10px;}
+.cart{background:#111;padding:15px;border-radius:15px;margin:20px auto;width:90%;max-width:400px;}
+.cart h3{text-align:center;}
+.cart-item{border-bottom:1px solid #333;padding:5px 0;}
+.admin-section input{width:80%;max-width:250px;}
+.offers{position:relative;max-width:900px;margin:40px auto;overflow:hidden;border-radius:20px;}
+.slide{display:none;position:relative;}
+.slide img{width:100%;height:300px;object-fit:cover;border-radius:20px;}
+.slide-text{position:absolute;bottom:20px;left:20px;background:rgba(0,0,0,0.6);padding:10px 15px;border-radius:10px;font-size:18px;}
+.prev,.next{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.6);color:white;border:none;font-size:25px;padding:10px 15px;cursor:pointer;border-radius:50%;}
+.prev{left:10px;}
+.next{right:10px;}
+</style>
+</head>
+<body>
+
+<nav>
+<a href="#menu">Menu</a>
+<a href="#cart">Cart</a>
+<a href="#login">Login</a>
+<a href="#admin">Admin</a>
+<a href="#offers">Offers</a>
+<a href="#contact">Contact</a>
+</nav>
+
+<header>
+<h1>☕ Cafe Sangat AI Business</h1>
+</header>
+
+<!-- Offers Slider -->
+<section id="offers">
+<h2>🔥 Special Offers</h2>
+<div class="offers">
+<div class="slide"><img src="images/burger.jpg"><div class="slide-text">Buy 1 Zinger Burger Get 1 Free 🍔</div></div>
+<div class="slide"><img src="images/cappuccino.jpg"><div class="slide-text">50% OFF on Cappuccino ☕</div></div>
+<div class="slide"><img src="images/chai.jpg"><div class="slide-text">Free Kashmiri Chai 🍵 with Family Deal</div></div>
+<button class="prev" onclick="changeSlide(-1)">❮</button>
+<button class="next" onclick="changeSlide(1)">❯</button>
+</div>
+</section>
+
+<!-- Menu -->
+<section id="menu">
+<h2>Our Menu</h2>
+<div id="menuItems" class="menu"></div>
+</section>
+
+<!-- Cart -->
+<section id="cart">
+<h2>🛒 Cart</h2>
+<div id="cartItems"></div>
+<h4>Total: Rs <span id="total">0</span></h4>
+<button onclick="checkout()">Checkout (Simulated Payment)</button>
+<p id="aiRecom"></p>
+</section>
+
+<!-- Login / Signup -->
+<section id="login">
+<h2>Login / Signup</h2>
+<input type="text" id="username" placeholder="Username">
+<input type="password" id="password" placeholder="Password">
+<button onclick="signup()">Signup</button>
+<button onclick="login()">Login</button>
+<p id="loginMsg"></p>
+</section>
+
+<!-- Admin Panel -->
+<section id="admin">
+<h2>Admin Panel</h2>
+<div class="admin-section">
+<input type="text" id="menuName" placeholder="Item Name">
+<input type="number" id="menuPrice" placeholder="Price">
+<input type="text" id="menuImg" placeholder="Image URL (local path)">
+<button onclick="addMenu()">Add Menu Item</button>
+<h3>Orders:</h3>
+<div id="orders"></div>
+</div>
+</section>
+
+<!-- Contact -->
+<section id="contact">
+<h2>Contact Us</h2>
+<p>📍 Kotdiji / Kot Banglo, Sindh</p>
+<p>📞 0300-0000000</p>
+<a style="color:#f39c12;" href="https://maps.app.goo.gl/V482UuNWUC4cWcj58" target="_blank">Open in Google Maps</a>
+</section>
+
+<!-- WhatsApp -->
+<a class="whatsapp" href="https://wa.me/923000000000" target="_blank">📱</a>
+
+<script>
+// ---------- Database ----------
+let database={menu:[
+{name:"Zinger Burger",price:500,img:"images/burger.jpg"},
+{name:"Cappuccino",price:400,img:"images/cappuccino.jpg"},
+{name:"Kashmiri Chai",price:300,img:"images/chai.jpg"},
+{name:"French Fries",price:200,img:"images/fries.jpg"}
+],users:[],orders:[]};
+
+// ---------- Offers Slider ----------
+let slideIndex=0;
+showSlides();
+function showSlides(){
+let slides=document.getElementsByClassName("slide");
+for(let i=0;i<slides.length;i++){slides[i].style.display="none";}
+slideIndex++;
+if(slideIndex>slides.length){slideIndex=1;}
+slides[slideIndex-1].style.display="block";
+setTimeout(showSlides,3000);
+}
+function changeSlide(n){slideIndex+=n-1;showSlides();}
+
+// ---------- Load Menu ----------
+let cart=[]; let total=0;
+function loadMenu(){
+let menuDiv=document.getElementById("menuItems");
+menuDiv.innerHTML="";
+database.menu.forEach((item,index)=>{
+let div=document.createElement("div");
+div.classList.add("item");
+div.innerHTML=`<img src="${item.img}"><h4>${item.name}</h4><p>Rs ${item.price}</p>
+<button onclick="addToCart(${index})">Add To Cart</button>`;
+menuDiv.appendChild(div);
+});
+}
+loadMenu();
+
+// ---------- Cart ----------
+function addToCart(index){
+let item=database.menu[index];
+cart.push(item);
+total+=item.price;
+updateCart();
+aiRecommendation();
+}
+function updateCart(){
+let div=document.getElementById("cartItems"); div.innerHTML="";
+cart.forEach(i=>{div.innerHTML+=`<p>${i.name} - Rs ${i.price}</p>`;});
+document.getElementById("total").innerText=total;
+}
+
+// ---------- Simulated Payment ----------
+function checkout(){
+if(cart.length===0){alert("Cart is empty!"); return;}
+let username=prompt("Enter username to place order");
+if(!username){alert("Login first"); return;}
+let payOption=prompt("Choose Payment Method: 1-JazzCash 2-EasyPaisa 3-Cash On Delivery","1");
+let method=(payOption==="1")?"JazzCash":(payOption==="2")?"EasyPaisa":"Cash On Delivery";
+let order={id:Date.now(),username,cart:[...cart],total,status:`Paid via ${method}`};
+database.orders.push(order);
+alert(`Payment Successful! OrderID: ${order.id} via ${method}`);
+cart=[]; total=0; updateCart();
+loadOrders();
+}
+
+// ---------- Login / Signup ----------
+function signup(){
+let u=document.getElementById('username').value;
+let p=document.getElementById('password').value;
+if(database.users.find(x=>x.username===u)){document.getElementById('loginMsg').innerText="User Exists"; return;}
+database.users.push({username:u,password:p});
+document.getElementById('loginMsg').innerText="Signup Success";
+}
+function login(){
+let u=document.getElementById('username').value;
+let p=document.getElementById('password').value;
+if(database.users.find(x=>x.username===u && x.password===p)){document.getElementById('loginMsg').innerText="Login Success";}
+else{document.getElementById('loginMsg').innerText="Invalid Credentials";}
+}
+
+// ---------- Admin ----------
+function addMenu(){
+let name=document.getElementById('menuName').value;
+let price=document.getElementById('menuPrice').value;
+let img=document.getElementById('menuImg').value;
+database.menu.push({name,price,img});
+loadMenu();
+alert("Menu Added!");
+}
+function loadOrders(){
+let div=document.getElementById("orders"); div.innerHTML="";
+database.orders.forEach(o=>{div.innerHTML+=`<p>OrderID:${o.id} User:${o.username} Total:${o.total} Status:${o.status}</p>`;});
+}
+setInterval(loadOrders,3000);
+
+// ---------- AI Recommendation ----------
+function aiRecommendation(){
+let msg=document.getElementById("aiRecom"); msg.innerText="";
+if(cart.length===0){msg.innerText=""; return;}
+let lastItem=cart[cart.length-1].name.toLowerCase();
+if(lastItem.includes("burger")) msg.innerText="💡 AI Suggestion: Try Cappuccino ☕ with your burger!";
+else if(lastItem.includes("chai")||lastItem.includes("coffee")) msg.innerText="💡 AI Suggestion: Add Zinger Burger 🍔 with your drink!";
+}
+</script>
+
+</body>
+</html>
